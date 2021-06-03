@@ -1,0 +1,15 @@
+---
+- hosts: nzxt
+  become: yes
+
+  tasks:
+  - name: Ensure booted from install media
+    fail:
+      msg: "Not booted from Arch install media"
+    when: ansible_nodename != 'archiso'
+    tags:
+      - exit_early
+  - name: Update the system clock
+    command: timedatectl set-ntp true
+    tags:
+    - sync_clock
