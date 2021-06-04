@@ -2,6 +2,9 @@
 - hosts: nzxt
   become: yes
 
+  vars_files:
+    - vars/nzxt.yml
+
   tasks:
   - name: Ensure booted from install media
     fail:
@@ -13,3 +16,9 @@
     command: timedatectl set-ntp true
     tags:
     - sync_clock
+  - name: Repartition install drive
+    block:
+      - name: Wipe install drive and all its partitions
+        command: find /dev -wholename "{{ install_drive }}*" -exec wipefs --force --all {} \;
+        tags:
+          - wipefs
