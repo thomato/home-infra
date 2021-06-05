@@ -40,4 +40,18 @@
       name: root
       flags: [lvm]
       state: present
-
+  - name: Create filesystems
+    block:
+      - name: Create FAT32 filesystem in boot partition
+        filesystem:
+          dev: '{{ install_drive }}p1'
+          fstype: vfat
+          opts: -F32
+          force: yes
+      - name: Create ext4 filesystem in root volume
+        filesystem:
+          dev: '{{ install_drive }}p2'
+          fstype: ext4
+          force: yes
+    tags:
+      - create_filesystems
