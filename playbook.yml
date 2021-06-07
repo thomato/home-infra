@@ -75,4 +75,7 @@
           state: mounted
     tags:
       - mount_filesystems
-
+  - name: Run pacstrap
+    command: pacstrap /mnt base dhclient dhcpcd efibootmgr grub linux linux-firmware lvm2 netctl openssh python sudo
+    tags:
+      - pacstrap
