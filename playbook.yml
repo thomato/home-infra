@@ -55,3 +55,24 @@
           force: yes
     tags:
       - create_filesystems
+  - name: Mount filesystems
+    block:
+      - name: Mount root filesystem
+        mount:
+          path: /mnt
+          src: '{{ install_drive }}p2'
+          fstype: ext4
+          state: mounted
+      - name: Create mountpoint for boot volume
+        file:
+          path: /mnt/boot
+          state: directory
+      - name: Mount boot filesystem
+        mount:
+          path: /mnt/boot
+          src: '{{ install_drive }}p1'
+          fstype: vfat
+          state: mounted
+    tags:
+      - mount_filesystems
+
