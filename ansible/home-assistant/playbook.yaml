@@ -1,0 +1,55 @@
+---
+- hosts: all
+  become: true
+  #vars_files:
+  #  - vars/default.yml
+
+  tasks:
+    - name: Create a home assistant container
+      docker_container:
+        name: home-assistant
+        image: homeassistant/home-assistant:2021.9.4
+        privileged: true
+        restart_policy: unless-stopped
+        env:
+          TZ: Europe/Amsterdam
+        volumes:
+          - /var/home-assistant/config:/config
+          - /etc/localtime:/etc/localtime:ro
+          - /var/run/docker.sock:/var/run/docker.sock
+          - /home/nando/.ssh:/root/.ssh
+        network_mode: host
+
+    - name: "Create MQTT config directory"
+      file:
+        path: /var/mosquitto/config
+        state: directory
+
+    - name: "Copy Mosquitto config file"
+      copy:
+        src: ./files/mosquitto.conf
+        dest: /var/mosquitto/config/mosquitto.conf
+
+    - name: "Create MQTT data directory"
+      file:
+        path: /var/mosquitto/data
+        state: directory
+
+    - name: "Create a MQTT container"
+      docker_container:
+        name: mqtt
+        image: eclipse-mosquitto:2.0.12
+        privileged: true
+#        labels:
+#          wud.tag.include: ^\d+\.\d+\.\d+$$
+#          wud.watch: true
+#        ports:
+#          - "1883:1883"
+#          - "9001:9001"
+        restart_policy: unless-stopped
+        volumes:
+          - /var/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+          - /var/mosquitto/config/passwd:/mosquitto/config/passwd
+          - /var/logs/mosquitto.log:/mosquitto/log
+          - /var/mosquitto/data:/mosquitto/data
+        network_mode: host
