@@ -37,19 +37,13 @@
 
     - name: "Create a MQTT container"
       docker_container:
-        name: mqtt
-        image: eclipse-mosquitto:2.0.12
-        privileged: true
-#        labels:
-#          wud.tag.include: ^\d+\.\d+\.\d+$$
-#          wud.watch: true
-#        ports:
-#          - "1883:1883"
-#          - "9001:9001"
+        name: mosquitto
+        image: eclipse-mosquitto:latest
+        ports:
+          - "1883:1883"
+          - "9001:9001"
         restart_policy: unless-stopped
         volumes:
-          - /var/mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
-          - /var/mosquitto/config/passwd:/mosquitto/config/passwd
-          - /var/logs/mosquitto.log:/mosquitto/log
-          - /var/mosquitto/data:/mosquitto/data
-        network_mode: host
+          - /etc/mosquitto:/mosquitto/config:ro
+          - /var/log/mosquitto.log:/mosquitto/log/mosquitto.log
+          - /var/lib/mosquitto:/mosquitto/data
