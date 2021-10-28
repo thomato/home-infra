@@ -1,0 +1,25 @@
+---
+- hosts: all
+  become: true
+  #vars_files:
+  #  - vars/default.yml
+
+  tasks:
+    - name: Create a Traefik container
+      docker_container:
+        name: traefik
+        image: traefik:v2.1
+        command: 
+          - --log.level=DEBUG
+          - --entrypoints.web.address=:80
+          - --entrypoints.websecure.address=:443
+          - --providers.docker
+          - --api
+          - --certificatesResolvers.letsencrypt.acme.email=nandothomassen@gmail.com
+          - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+          - --certificatesResolvers.letsencrypt.acme.dnschallenge=true
+          - --certificatesResolvers.letsencrypt.acme.dnschallenge.provider=transip
+          - --certificatesResolvers.letsencrypt.acme.dnschallenge.delayBeforeCheck=0
+          - --serverstransport.insecureskipverify=true
+        restart_policy: unless-stopped
+
