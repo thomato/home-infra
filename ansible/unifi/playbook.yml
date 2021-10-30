@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: true
+  #vars_files:
+  #  - vars/default.yml
+
+  tasks:
+    - name: "Create Unifi config directory"
+      file:
+        path: /etc/unifi
+        state: directory
+
+    - name: Create a Unifi Controller container
+      docker_container:
+        name: unifi
+        image: linuxserver/unifi-controller
+        volumes:
+          - "/etc/unifi:/config"
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.unifi.rule: Host(`unifi.tools.thomassen.pro`)
+          traefik.http.routers.unifi.entrypoints: websecure
+          traefik.http.routers.unifi.tls: "true"
+          traefik.http.routers.unifi.tls.certresolver: letsencrypt
+          traefik.http.services.unifi.loadbalancer.server.scheme: https
+          traefik.http.services.unifi.loadbalancer.server.port: "8443"
+        ports:
+          - 8080:8080
+          - 3478:3478/udp
+          - 10001:10001/udp
+          - 1900:1900/udp
+        restart_policy: unless-stopped
+        env:
+          PUID: "1313"
+          PGID: "1313"
+          TZ: "Europe/Amsterdam"
+        networks:
+          - name: traefik
