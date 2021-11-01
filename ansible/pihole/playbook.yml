@@ -1,0 +1,51 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: Stop service httpd, if started
+      service:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+
+    - name: "Create Pihole config directory"
+      file:
+        path: /etc/pihole
+        state: directory
+
+    - name: "Create Pihole config directory"
+      file:
+        path: /etc/dnsmasq.d
+        state: directory
+
+    - name: Create a Pihole container
+      docker_container:
+        name: pihole
+        image: pihole/pihole:latest
+        volumes:
+          - "/etc/pihole:/etc/pihole/"
+          - "/etc/dnsmasq.d:/etc/dnsmasq.d/"
+        capabilities:
+          - NET_ADMIN
+        ports:
+          - 53:53
+          - 53:53/udp
+          - 67:67/udp
+        restart_policy: unless-stopped
+        env:
+          TZ: "Europe/Amsterdam"
+          ServerIP: 192.168.1.131
+          WEBPASSWORD: '{{ password }}'
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.pihole.rule: Host(`pihole.tools.thomassen.pro`)
+          traefik.http.routers.pihole.entrypoints: websecure
+          traefik.http.routers.pihole.tls: "true"
+          traefik.http.routers.pihole.tls.certresolver: letsencrypt
+          traefik.http.services.pihole.loadbalancer.server.scheme: http
+          traefik.http.services.pihole.loadbalancer.server.port: "80"
