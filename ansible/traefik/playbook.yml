@@ -40,7 +40,7 @@
         restart_policy: unless-stopped
         labels:
           # Request a certificate for the domains thomassen.pro (main) and *.tools.thomassen.pro (SAN)
-          traefik.http.routers.traefik.tls: true
+          traefik.http.routers.traefik.tls: 'true'
           traefik.http.routers.traefik.tls.certresolver: letsencrypt
           traefik.http.routers.traefik.tls.domains[0].main: "thomassen.pro"
           traefik.http.routers.traefik.tls.domains[0].sans: "*.tools.thomassen.pro"
