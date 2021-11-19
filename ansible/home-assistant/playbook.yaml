@@ -13,6 +13,8 @@
         restart_policy: unless-stopped
         env:
           TZ: Europe/Amsterdam
+        devices:
+          - /dev/bus/usb/001/006:/dev/bus/usb/001/006
         volumes:
           - /var/home-assistant/config:/config
           - /etc/localtime:/etc/localtime:ro

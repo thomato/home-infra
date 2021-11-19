@@ -14,3 +14,8 @@ Install Docker:
 ```
 ansible-playbook docker/playbook.yaml -i hosts -l nzxt -u nando -kK
 ```
+
+Install Jenkins
+```
+ansible-playbook jenkins/playbook.yml -i hosts -l nzxt -u nando -kK
+```

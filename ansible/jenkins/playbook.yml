@@ -1,0 +1,38 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: "Create Jenkins config directory"
+      file:
+        path: /var/jenkins
+        state: directory
+
+# sudo docker container run --restart unless-stopped --network jenkins-net --hostname jenkins --publish 8080:8080 --volume jenkins-data:/var jenkins_home jenkins/jenkins:lts
+    - name: Create a Jenkins container
+      docker_container:
+        name: jenkins
+        image: jenkins/jenkins:lts
+        recreate: yes
+        volumes:
+          - "/var/jenkins:/var/jenkins_home"
+        restart_policy: unless-stopped
+        privileged: true
+        user: root
+        ports:
+          - 50003:50000
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.jenkins.rule: Host(`jenkins.tools.thomassen.pro`)
+          traefik.http.routers.jenkins.entrypoints: websecure
+          traefik.http.routers.jenkins.tls: "true"
+          traefik.http.routers.jenkins.tls.certresolver: letsencrypt
+          traefik.http.services.jenkins.loadbalancer.server.scheme: http
+          traefik.http.services.jenkins.loadbalancer.server.port: "8080"
+        env:
+          JAVA_OPTS: -Djenkins.install.runSetupWizard=false
+          JENKINS_OPTS: '--argumentsRealm.roles.user=admin --argumentsRealm.passwd.admin={{ password }} --argumentsRealm.roles.admin=admin'
