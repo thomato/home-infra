@@ -5,16 +5,47 @@
     - vars/default.yml
 
   tasks:
+    - name: Create Jenkins' Dockerfile build directory
+      file:
+        path: /tmp/jenkins
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Copy Jenkins Dockerfile
+      copy:
+        src: ./Dockerfile
+        dest: /tmp/jenkins/Dockerfile
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy Jenkins plugins list
+      copy:
+        src: ./plugins.txt
+        dest: /tmp/jenkins/plugins.txt
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Build Jenkins container image
+      docker_image:
+        name: jenkins-custom:v1.0
+        build:
+          path: /tmp/jenkins
+        source: build
+        state: present
+
     - name: "Create Jenkins config directory"
       file:
         path: /var/jenkins
         state: directory
 
-# sudo docker container run --restart unless-stopped --network jenkins-net --hostname jenkins --publish 8080:8080 --volume jenkins-data:/var jenkins_home jenkins/jenkins:lts
     - name: Create a Jenkins container
       docker_container:
         name: jenkins
-        image: jenkins/jenkins:lts
+        image: jenkins-custom:v1.0
         recreate: yes
         volumes:
           - "/var/jenkins:/var/jenkins_home"
@@ -36,3 +67,8 @@
         env:
           JAVA_OPTS: -Djenkins.install.runSetupWizard=false
           JENKINS_OPTS: '--argumentsRealm.roles.user=admin --argumentsRealm.passwd.admin={{ password }} --argumentsRealm.roles.admin=admin'
+
+    - name: Install Jenkins Pipeline
+      get_url:
+        url: https://updates.jenkins-ci.org/latest/build-pipeline-plugin.hpi
+        dest: /var/jenkins/plugins
