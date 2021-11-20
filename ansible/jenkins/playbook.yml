@@ -29,6 +29,22 @@
         group: root
         mode: '0644'
 
+    - name: Copy Jenkins 'Configuration as Code' configuration file (for Dockerfile)
+      copy:
+        src: ./casc.yaml
+        dest: /tmp/jenkins/casc.yaml
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Copy Jenkins 'Configuration as Code' configuration file
+      copy:
+        src: ./casc.yaml
+        dest: /var/jenkins/casc.yaml
+        owner: root
+        group: root
+        mode: '0644'
+
     - name: Build Jenkins container image
       docker_image:
         name: jenkins-custom:v1.0
