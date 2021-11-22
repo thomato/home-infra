@@ -1,0 +1,34 @@
+#jenkins:
+#  nodes:
+#    - permanent:
+#        labelString: "Default"
+#        mode: NORMAL
+#        name: "Default Node"
+#        remoteFS: "/tmp/jenkins"
+#        launcher:
+#          jnlp:
+#            workDirSettings:
+#              disabled: true
+#              failIfWorkDirIsMissing: false
+#              internalDir: "remoting"
+#              workDirPath: "/tmp"
+
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: ${JENKINS_ADMIN_ID}
+          password: ${JENKINS_ADMIN_PASSWORD}
+
+  authorizationStrategy:
+    globalMatrix:
+      permissions:
+        - "Overall/Administer:admin"
+        - "Overall/Read:authenticated"
+
+unclassified:
+  location:
+    adminAddress: nandothomassen@gmail.com
+    url: https://jenkins.tools.thomassen.pro/
+

@@ -37,6 +37,11 @@
         group: root
         mode: '0644'
 
+    - name: "Create Jenkins config directory"
+      file:
+        path: /var/jenkins
+        state: directory
+
     - name: Copy Jenkins 'Configuration as Code' configuration file
       copy:
         src: ./casc.yaml
@@ -52,11 +57,6 @@
           path: /tmp/jenkins
         source: build
         state: present
-
-    - name: "Create Jenkins config directory"
-      file:
-        path: /var/jenkins
-        state: directory
 
     - name: Create a Jenkins container
       docker_container:
@@ -82,7 +82,9 @@
           traefik.http.services.jenkins.loadbalancer.server.port: "8080"
         env:
           JAVA_OPTS: -Djenkins.install.runSetupWizard=false
-          JENKINS_OPTS: '--argumentsRealm.roles.user=admin --argumentsRealm.passwd.admin={{ password }} --argumentsRealm.roles.admin=admin'
+#          JENKINS_OPTS: '--argumentsRealm.roles.user=admin --argumentsRealm.passwd.admin={{ password }} --argumentsRealm.roles.admin=admin'
+          JENKINS_ADMIN_ID: admin
+          JENKINS_ADMIN_PASSWORD: "{{ password }}"
 
     - name: Install Jenkins Pipeline
       get_url:
