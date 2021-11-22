@@ -32,3 +32,8 @@ unclassified:
     adminAddress: nandothomassen@gmail.com
     url: https://jenkins.tools.thomassen.pro/
 
+security:
+  queueItemAuthenticator:
+    authenticators:
+      - global:
+          strategy: triggeringUsersAuthorizationStrategy
