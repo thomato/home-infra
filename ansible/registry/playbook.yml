@@ -1,0 +1,24 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: Create a Registry container
+      docker_container:
+        name: registry
+        image: registry:2
+        volumes:
+          - "/storage/docker/registry:/var/lib/registry"
+        ports:
+          - 5000:5000
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.registry.rule: Host(`registry.tools.thomassen.pro`)
+          traefik.http.routers.registry.entrypoints: websecure
+          traefik.http.routers.registry.tls: "true"
+          traefik.http.routers.registry.tls.certresolver: letsencrypt
+          traefik.http.services.registry.loadbalancer.server.scheme: http
+          traefik.http.services.registry.loadbalancer.server.port: "80"
