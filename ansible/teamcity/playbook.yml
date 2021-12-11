@@ -1,0 +1,94 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: "Boot storage hard disk"
+      mount:
+        path: /storage
+        src: UUID=9a89e864-d961-4460-b315-2f9ea6b4accc
+        fstype: ext4
+        boot: true
+        state: mounted
+
+    - name: "Create TeamCity data directory"
+      file:
+        path: /storage/teamcity/data
+        state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity logs directory"
+      file:
+        path: /var/logs/teamcity
+        state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity agent config directory"
+      file:
+        path: /etc/teamcity/agent
+        state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity database directory"
+      file:
+        path: /storage/postgres/teamcity/data
+        state: directory
+
+    - name: Create a TeamCity server container
+      docker_container:
+        name: teamcity-server
+        image: jetbrains/teamcity-server:latest
+        env:
+          TEAMCITY_HTTPS_PROXY_ENABLED: "true"
+        volumes:
+          - "/storage/teamcity/data:/data/teamcity_server/datadir"
+          - "/var/logs/teamcity:/opt/teamcity/logs"
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.teamcity.rule: Host(`teamcity.tools.thomassen.pro`)
+          traefik.http.routers.teamcity.entrypoints: websecure
+          traefik.http.routers.teamcity.tls: "true"
+          traefik.http.routers.teamcity.tls.certresolver: letsencrypt
+          traefik.http.services.teamcity.loadbalancer.server.scheme: http
+          traefik.http.services.teamcity.loadbalancer.server.port: "8111"
+        memory: 2G
+        memory_swap: 6G
+        cpus: 1.5
+
+    - name: Create a TeamCity agent container
+      docker_container:
+        name: teamcity-agent
+        image: jetbrains/teamcity-agent:latest
+        env:
+          SERVER_URL: "http://teamcity-server:8111"
+        volumes:
+          - "/etc/teamcity/agent:/data/teamcity_agent/conf"
+          - "/var/run/docker.sock:/var/run/docker.sock"
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik
+        memory: 1G
+        memory_swap: 5G
+        cpus: 1
+
+    - name: Create Postgres database container for TeamCity
+      docker_container:
+        name: teamcity-db
+        image: postgres
+        restart_policy: unless-stopped
+        env:
+          POSTGRES_PASSWORD: "{{ password }}"
+          POSTGRES_USER: "teamcity"
+          POSTGRES_DB: "teamcity"
+        volumes:
+          - "/storage/postgres/teamcity/data:/var/lib/postgresql/data"
+        networks:
+          - name: traefik
