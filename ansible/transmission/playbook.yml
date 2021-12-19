@@ -1,0 +1,60 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: "Boot storage hard disk"
+      mount:
+        path: /storage
+        src: UUID=9a89e864-d961-4460-b315-2f9ea6b4accc
+        fstype: ext4
+        boot: true
+        state: mounted
+
+    - name: "Create Transmission config directory"
+      file:
+        path: /etc/transmission
+        state: directory
+
+    - name: "Create Transmission watch directory"
+      file:
+        path: /tmp/transmission/watch
+        state: directory
+
+    - name: "Create Transmission data directory"
+      file:
+        path: /storage/transmission/data
+        state: directory
+
+    - name: "Create Transmission container"
+      docker_container:
+        name: transmission
+        image: lscr.io/linuxserver/transmission
+        ports:
+          - 9091:9091
+          - 51413:51413/tcp
+          - 51413:51413/udp
+        env:
+          PUID: '1000'
+          PGID: '1000'
+          TZ: "Europe/Amsterdam"
+          TRANSMISSION_WEB_HOME: "/combustion-release/"
+          USER: "{{ user }}"
+          PASS: "{{ password }}"
+        volumes:
+          - "/etc/transmission:/config"
+          - "/tmp/transmission/watch:/watch"
+          - "/storage/transmission/data:/downloads"
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.transmission.rule: Host(`transmission.tools.thomassen.pro`)
+          traefik.http.routers.transmission.entrypoints: websecure
+          traefik.http.routers.transmission.tls: "true"
+          traefik.http.routers.transmission.tls.certresolver: letsencrypt
+          traefik.http.services.transmission.loadbalancer.server.scheme: http
+          traefik.http.services.transmission.loadbalancer.server.port: "9091"
