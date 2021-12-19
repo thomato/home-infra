@@ -1,0 +1,64 @@
+---
+- hosts: all
+  become: true
+  vars_files:
+    - vars/default.yml
+
+  tasks:
+    - name: "Boot storage hard disk"
+      mount:
+        path: /storage
+        src: UUID=9a89e864-d961-4460-b315-2f9ea6b4accc
+        fstype: ext4
+        boot: true
+        state: mounted
+
+    - name: "Create Plex config directory"
+      file:
+        path: /etc/plex
+        state: directory
+
+    - name: "Create Plex transcode directory"
+      file:
+        path: /tmp/plex/transcode
+        state: directory
+
+    - name: "Create Plex data directory"
+      file:
+        path: /storage/plex/data
+        state: directory
+
+    - name: "Create Plex container"
+      docker_container:
+        name: plex
+        image: plexinc/pms-docker
+        ports:
+          - 32400:32400/tcp
+          - 3005:3005/tcp
+          - 8324:8324/tcp
+          - 32469:32469/tcp
+          - 1900:1900/udp
+          - 32410:32410/udp
+          - 32412:32412/udp
+          - 32413:32413/udp
+          - 32414:32414/udp
+        env:
+          TZ: "Europe/Amsterdam"
+          PLEX_CLAIM: "{{ token }}"
+          ADVERTISE_IP: "http://192.168.1.131:32400/"
+        hostname: "Plex"
+        volumes:
+          - "/etc/plex:/config"
+          - "/tmp/plex/transcode:/transcode"
+          - "/storage/plex/data:/data"
+        restart_policy: unless-stopped
+        networks:
+          - name: traefik
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.plex.rule: Host(`plex.tools.thomassen.pro`)
+          traefik.http.routers.plex.entrypoints: websecure
+          traefik.http.routers.plex.tls: "true"
+          traefik.http.routers.plex.tls.certresolver: letsencrypt
+          traefik.http.services.plex.loadbalancer.server.scheme: http
+          traefik.http.services.plex.loadbalancer.server.port: "32400"

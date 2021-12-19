@@ -14,6 +14,7 @@
       docker_container:
         name: unifi
         image: linuxserver/unifi-controller
+        recreate: yes
         volumes:
           - "/etc/unifi:/config"
         labels:
@@ -28,7 +29,7 @@
           - 8080:8080
           - 3478:3478/udp
           - 10001:10001/udp
-          - 1900:1900/udp
+#          - 1900:1900/udp
         restart_policy: unless-stopped
         env:
           PUID: "1313"
