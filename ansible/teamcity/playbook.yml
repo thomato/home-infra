@@ -38,6 +38,34 @@
       file:
         path: /storage/postgres/teamcity/data
         state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity Agent work directory"
+      file:
+        path: /opt/buildagent/work
+        state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity Agent system directory"
+      file:
+        path: /opt/buildagent/system
+        state: directory
+
+    - name: Create Postgres database container for TeamCity
+      docker_container:
+        name: teamcity-db
+        image: postgres
+        restart_policy: unless-stopped
+        env:
+          POSTGRES_PASSWORD: "{{ password }}"
+          POSTGRES_USER: "teamcity"
+          POSTGRES_DB: "teamcity"
+        volumes:
+          - "/storage/postgres/teamcity/data:/var/lib/postgresql/data"
+        networks:
+          - name: traefik
 
     - name: Create a TeamCity server container
       docker_container:
@@ -49,6 +77,7 @@
           - "/storage/teamcity/data:/data/teamcity_server/datadir"
           - "/var/logs/teamcity:/opt/teamcity/logs"
         restart_policy: unless-stopped
+        privileged: "true"
         networks:
           - name: traefik
         labels:
@@ -67,28 +96,17 @@
       docker_container:
         name: teamcity-agent
         image: jetbrains/teamcity-agent:latest
+        privileged: "true"
         env:
           SERVER_URL: "http://teamcity-server:8111"
         volumes:
           - "/etc/teamcity/agent:/data/teamcity_agent/conf"
           - "/var/run/docker.sock:/var/run/docker.sock"
+          - "/opt/buildagent/work:/opt/buildagent/work"
+          - "/opt/buildagent/system:/opt/buildagent/system"
         restart_policy: unless-stopped
         networks:
           - name: traefik
         memory: 1G
         memory_swap: 5G
         cpus: 1
-
-    - name: Create Postgres database container for TeamCity
-      docker_container:
-        name: teamcity-db
-        image: postgres
-        restart_policy: unless-stopped
-        env:
-          POSTGRES_PASSWORD: "{{ password }}"
-          POSTGRES_USER: "teamcity"
-          POSTGRES_DB: "teamcity"
-        volumes:
-          - "/storage/postgres/teamcity/data:/var/lib/postgresql/data"
-        networks:
-          - name: traefik
