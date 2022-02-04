@@ -52,6 +52,15 @@
       file:
         path: /opt/buildagent/system
         state: directory
+        owner: 1000
+        group: 1000
+
+    - name: "Create TeamCity Agent temp directory"
+      file:
+        path: /opt/buildagent/temp
+        state: directory
+        owner: 1000
+        group: 1000
 
     - name: Create Postgres database container for TeamCity
       docker_container:
@@ -99,11 +108,13 @@
         privileged: "true"
         env:
           SERVER_URL: "http://teamcity-server:8111"
+          AGENT_NAME: "voldemort"
         volumes:
           - "/etc/teamcity/agent:/data/teamcity_agent/conf"
           - "/var/run/docker.sock:/var/run/docker.sock"
           - "/opt/buildagent/work:/opt/buildagent/work"
           - "/opt/buildagent/system:/opt/buildagent/system"
+          - "/opt/buildagent/temp:/opt/buildagent/temp"
         restart_policy: unless-stopped
         networks:
           - name: traefik
