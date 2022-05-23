@@ -12,10 +12,10 @@ A lot of Docker containers are set up with Lets Encrypt. If not available locall
 ## Install 
 Install Docker:
 ```
-ansible-playbook docker/playbook.yaml -i hosts -l nzxt -u nando -kK
+ansible-playbook docker/playbook.yaml -i hosts -l homelab -u nando -kK
 ```
 
 Install Jenkins
 ```
-ansible-playbook jenkins/playbook.yml -i hosts -l nzxt -u nando -kK
+ansible-playbook jenkins/playbook.yml -i hosts -l homelab -u nando -kK
 ```
