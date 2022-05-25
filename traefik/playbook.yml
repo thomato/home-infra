@@ -5,16 +5,6 @@
   #  - vars/default.yml
 
   tasks:
-    - name: "Create .keys directory"
-      file:
-        path: ~/.keys
-        state: directory
-
-    - name: "Copy TransIP private key"
-      copy:
-        src: ~/.keys/transip
-        dest: ~/.keys/transip
-
     - name: Create a network for Traefik
       docker_network:
         name: traefik
@@ -23,6 +13,7 @@
       docker_container:
         name: traefik
         image: traefik:v2.9
+        recreate: yes
         command:
           - --log.level=DEBUG
           - --entrypoints.web.address=:80
@@ -33,15 +24,14 @@
           - --certificatesResolvers.letsencrypt.acme.email=nandothomassen@gmail.com
           - --certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
           - --certificatesResolvers.letsencrypt.acme.tlsChallenge=true
-          - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+          - --certificatesResolvers.letsencrypt.acme.dnsChallenge=false
+          #- --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
           - --serverstransport.insecureskipverify=true
         restart_policy: unless-stopped
         labels:
           # Request a certificate for the domains thomassen.pro (main) and *.tools.thomassen.pro (SAN)
           traefik.http.routers.traefik.tls: 'true'
           traefik.http.routers.traefik.tls.certresolver: letsencrypt
-          traefik.http.routers.traefik.tls.domains[0].main: "thomassen.pro"
-          traefik.http.routers.traefik.tls.domains[0].sans: "*.tools.thomassen.pro"
           traefik.http.routers.api.rule: Host(`traefik.tools.thomassen.pro`)
           traefik.http.routers.api.service: api@internal
           traefik.http.routers.traefik.entrypoints: websecure
@@ -49,15 +39,11 @@
           traefik.http.routers.redirs.rule: hostregexp(`{host:.+}`)
           traefik.http.routers.redirs.entrypoints: web
           traefik.http.routers.redirs.middlewares: redirect-to-https
-        env:
-          TRANSIP_ACCOUNT_NAME: nandothomassen
-          TRANSIP_PRIVATE_KEY_PATH: /private.key
         ports:
           - 80:80
           - 443:443
         volumes:
-          - "letsencrypt:/letsencrypt/"
+          - "/etc/letsencrypt:/letsencrypt/"
           - "/var/run/docker.sock:/var/run/docker.sock"
-          - "~/.keys/transip:/private.key:ro"
         networks:
           - name: traefik

@@ -1,21 +1,10 @@
 # Home server
-## Remote setup
-Install Linux on the remote machine. A bare installation will suffice.
+Installs my homelab server.
 
-## Local setup
-
-A lot of Docker containers are set up with Lets Encrypt. If not available locally, create a new private key for the TransIP API and place it under:
+## Prepare server
+First run the `setup-server.yml` playbook using the following command:
 ```
-~/.keys/transip
+ansible-playbook setup-server.yml -i hosts -kK
 ```
 
-## Install 
-Install Docker:
-```
-ansible-playbook docker/playbook.yaml -i hosts -l homelab -u nando -kK
-```
-
-Install Jenkins
-```
-ansible-playbook jenkins/playbook.yml -i hosts -l homelab -u nando -kK
-```
+This asks for the connection password and for the privilege escalation password. After running this, SSH Public Key authencation will be set up as well as passwordless sudo.

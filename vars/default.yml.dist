@@ -1,0 +1,2 @@
+# The username used by Ansible to login to the system
+username: root
