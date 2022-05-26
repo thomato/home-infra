@@ -1,0 +1,10 @@
+---
+- hosts: homelab
+  become: yes
+
+  vars:
+    # We install all Docker containers using the Ansible `docker_container` plugin
+    docker_install_compose_plugin: false
+
+  roles:
+    - geerlingguy.docker
