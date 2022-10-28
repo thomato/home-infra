@@ -32,8 +32,8 @@
 #          - 1900:1900/udp
         restart_policy: unless-stopped
         env:
-          PUID: "1313"
-          PGID: "1313"
+          PUID: "1000"
+          PGID: "1000"
           TZ: "Europe/Amsterdam"
         networks:
           - name: traefik

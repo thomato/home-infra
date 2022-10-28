@@ -1,0 +1,28 @@
+---
+- hosts: all
+  become: true
+
+  tasks:
+    - name: "Duplicati: Create Docker container"
+      docker_container:
+        name: duplicati
+        image: lscr.io/linuxserver/duplicati:latest
+        env:
+          TZ: "Europe/Amsterdam"
+          PUID: "1000"
+          PGID: "1000"
+        volumes:
+          - "/etc/duplicati/config:/config"
+          - "/etc/unifi:/source:ro"
+        restart_policy: unless-stopped
+        privileged: "yes"
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.duplicati.rule: Host(`duplicati.tools.thomassen.pro`)
+          traefik.http.routers.duplicati.entrypoints: websecure
+          traefik.http.routers.duplicati.tls: "true"
+          traefik.http.routers.duplicati.tls.certresolver: letsencrypt
+          traefik.http.services.duplicati.loadbalancer.server.scheme: http
+          traefik.http.services.duplicati.loadbalancer.server.port: "8200"
+        networks:
+          - name: traefik
